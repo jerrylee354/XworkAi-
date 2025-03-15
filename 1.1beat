@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XworkAi - Vision OS 風格</title>
+    <style>
+        /* 整體樣式 */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 動態背景 - 粒子效果 */
+        canvas#particle-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* 主容器 */
+        .parent {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 32px;
+            width: 380px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), inset 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+            animation: slideIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .div1 {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes slideIn {
+            from { transform: translate(-50%, -40%); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
+        /* 標題 */
+        h1 {
+            font-size: 28px;
+            margin-bottom: 28px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.95);
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 輸入框 */
+        .input-group {
+            margin-bottom: 20px;
+            opacity: 0;
+            width: 100%;
+            max-width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group.active {
+            opacity: 1;
+            animation: slideInField 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation-delay: var(--delay);
+        }
+
+        @keyframes slideInField {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group.error {
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: left;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        input:focus, textarea:focus {
+            border-color: rgba(0, 125, 255, 0.8);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 12px rgba(0, 125, 255, 0.3), inset 0 1px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            backdrop-filter: blur(24px);
+        }
+
+        input.error {
+            border-color: rgba(255, 0, 0, 0.8);
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.3);
+        }
+
+        /* 按鈕 */
+        button {
+            width: 100%;
+            max-width: 300px;
+            padding: 14px;
+            background: linear-gradient(90deg, rgba(0, 125, 255, 0.9), rgba(0, 198, 255, 0.9));
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            box-shadow: 0 4px 16px rgba(0, 125, 255, 0.3);
+            position: relative;
+        }
+
+        button.active {
+            opacity: 1;
+            animation: slideUpButton 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards 0.4s;
+        }
+
+        @keyframes slideUpButton {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        button:hover:not(.disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 125, 255, 0.5);
+            background: linear-gradient(90deg, rgba(0, 125, 255, 1), rgba(0, 198, 255, 1));
+        }
+
+        button:active:not(.disabled) {
+            transform: scale(0.98);
+            box-shadow: 0 2px 12px rgba(0, 125, 255, 0.4);
+        }
+
+        button.loading {
+            color: transparent;
+            pointer-events: none;
+        }
+
+        button.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        button.disabled {
+            background: rgba(100, 100, 100, 0.9);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* 切換連結 */
+        .toggle-link, .forgot-password {
+            margin-top: 16px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: color 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards 0.6s;
+        }
+
+        .toggle-link:hover, .forgot-password:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* 動態光影效果 */
+        .parent::before, .ai-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent);
+            opacity: 0.4;
+            pointer-events: none;
+            animation: glow 10s infinite ease-in-out;
+        }
+
+        @keyframes glow {
+            0% { transform: translate(10%, 10%) scale(1); }
+            50% { transform: translate(0%, 0%) scale(1.15); }
+            100% { transform: translate(10%, 10%) scale(1); }
+        }
+
+        /* 自定義彈窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 28px;
+            width: 340px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), inset 0 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal.active .modal-content {
+            animation: modalPopIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .modal.closing .modal-content {
+            animation: modalPopOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes modalPopIn {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes modalPopOut {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(40px); opacity: 0; }
+        }
+
+        .modal-close-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .modal-close-icon:hover {
+            color: rgba(255, 255, 255, 0.9);
+            transform: rotate(90deg);
+        }
+
+        .modal-message {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .modal-button {
+            padding: 10px 24px;
+            background: linear-gradient(90deg, rgba(0, 125, 255, 0.9), rgba(0, 198, 255, 0.9));
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 125, 255, 0.3);
+        }
+
+        .modal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 125, 255, 0.5);
+            background: linear-gradient(90deg, rgba(0, 125, 255, 1), rgba(0, 198, 255, 1));
+        }
+
+        .modal-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 12px rgba(0, 125, 255, 0.4);
+        }
+
+        /* AI 頁面容器 */
+        .ai-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 20px;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), inset 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            overflow: hidden;
+            animation: slideIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .menu-icon, .settings-icon {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            transition: color 0.3s ease, background 0.3s ease;
+        }
+
+        .menu-icon:hover, .settings-icon:hover {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .ai-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            text-align: left;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+        }
+
+        .ai-input-area {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .ai-input-area textarea {
+            flex-grow: 1;
+            resize: none;
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        .ai-input-area button {
+            width: 100px;
+            max-width: none;
+            transition: background 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        /* 選單 */
+        .sidebar {
+            position: absolute;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 2;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .chat-history {
+            margin-top: 60px;
+            overflow-y: auto;
+            height: calc(100% - 120px);
+        }
+
+        .chat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .chat-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .chat-item span {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .chat-item button {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .chat-item button:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* 設定頁面 */
+        .settings-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .settings-content {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 28px;
+            width: 340px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), inset 0 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        .settings-panel.active .settings-content {
+            animation: modalPopIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .settings-panel.closing .settings-content {
+            animation: modalPopOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .settings-option {
+            margin: 20px 0;
+        }
+
+        .settings-option button, .settings-option input {
+            width: 100%;
+            max-width: 280px;
+        }
+
+        /* 隱藏與顯示 */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particle-bg"></canvas>
+
+    <!-- 登入頁面 -->
+    <div class="parent" id="auth-container">
+        <div class="div1">
+            <h1 id="form-title">登入</h1>
+            <div class="input-group" id="name-group" style="--delay: 0.1s">
+                <label for="name">姓名</label>
+                <input type="text" id="name" placeholder="輸入姓名">
+            </div>
+            <div class="input-group" id="email-group" style="--delay: 0.2s">
+                <label for="email">電子郵件</label>
+                <input type="email" id="email" placeholder="輸入電子郵件">
+            </div>
+            <div class="input-group" id="password-group" style="--delay: 0.3s">
+                <label for="password">密碼</label>
+                <input type="password" id="password" placeholder="輸入密碼">
+            </div>
+            <button id="auth-button">登入</button>
+            <div class="toggle-link" id="toggle-auth">還沒有帳號？註冊</div>
+            <div class="forgot-password" id="forgot-password">忘記密碼？</div>
+        </div>
+    </div>
+
+    <!-- AI 頁面 -->
+    <div class="ai-container hidden" id="ai-container">
+        <div class="ai-header">
+            <div>
+                <span class="menu-icon" id="menu-toggle">[Menu]</span>
+                <span class="settings-icon" id="settings-toggle">[Settings]</span>
+            </div>
+            <h1>XworkAi</h1>
+        </div>
+        <div class="ai-content" id="ai-content">
+            <p>歡迎使用 XworkAi，請輸入訊息以開始對話！</p>
+        </div>
+        <div class="ai-input-area">
+            <textarea id="ai-input" placeholder="輸入你的訊息..."></textarea>
+            <button id="ai-submit" class="disabled">送出</button>
+        </div>
+        <div class="sidebar" id="sidebar">
+            <h2>聊天記錄</h2>
+            <div class="chat-history" id="chat-history"></div>
+        </div>
+    </div>
+
+    <!-- 自定義彈窗 -->
+    <div class="modal" id="custom-modal">
+        <div class="modal-content">
+            <span class="modal-close-icon" id="modal-close-icon">✕</span>
+            <p class="modal-message" id="modal-message"></p>
+            <button class="modal-button" id="modal-close-button">確定</button>
+        </div>
+    </div>
+
+    <!-- 設定頁面 -->
+    <div class="settings-panel" id="settings-panel">
+        <div class="settings-content">
+            <span class="modal-close-icon" id="settings-close-icon">✕</span>
+            <h2>設定</h2>
+            <div class="settings-option">
+                <label>主題模式</label>
+                <button id="toggle-theme">切換至淺模式</button>
+            </div>
+            <div class="settings-option">
+                <label>更改用戶名</label>
+                <input type="text" id="new-username" placeholder="輸入新用戶名">
+                <button id="update-username">更新</button>
+            </div>
+            <div class="settings-option">
+                <button id="logout">登出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // 導入 Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            sendPasswordResetEmail, 
+            sendEmailVerification, 
+            updateProfile 
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyDsePB3baKhailSJN0zXf0DcosyX0fM8xk",
+            authDomain: "xworkai.firebaseapp.com",
+            projectId: "xworkai",
+            storageBucket: "xworkai.firebasestorage.app",
+            messagingSenderId: "776423226967",
+            appId: "1:776423226967:web:6b3e01bbfe96b1a232ad12"
+        };
+
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // DOM 元素 - 登入頁面
+        const authContainer = document.getElementById('auth-container');
+        const formTitle = document.getElementById('form-title');
+        const authButton = document.getElementById('auth-button');
+        const toggleAuth = document.getElementById('toggle-auth');
+        const forgotPassword = document.getElementById('forgot-password');
+        const emailInput = document.getElementById('email');
+        const nameInput = document.getElementById('name');
+        const passwordInput = document.getElementById('password');
+        const nameGroup = document.getElementById('name-group');
+        const emailGroup = document.getElementById('email-group');
+        const passwordGroup = document.getElementById('password-group');
+
+        // DOM 元素 - AI 頁面
+        const aiContainer = document.getElementById('ai-container');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const chatHistory = document.getElementById('chat-history');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsCloseIcon = document.getElementById('settings-close-icon');
+        const toggleTheme = document.getElementById('toggle-theme');
+        const newUsernameInput = document.getElementById('new-username');
+        const updateUsernameButton = document.getElementById('update-username');
+        const logoutButton = document.getElementById('logout');
+        const aiInput = document.getElementById('ai-input');
+        const aiSubmit = document.getElementById('ai-submit');
+        const aiContent = document.getElementById('ai-content');
+
+        // DOM 元素 - 彈窗
+        const modal = document.getElementById('custom-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseButton = document.getElementById('modal-close-button');
+        const modalCloseIcon = document.getElementById('modal-close-icon');
+
+        // 狀態控制
+        let isLogin = true;
+        let isReset = false;
+        let chatRecords = JSON.parse(localStorage.getItem('chatRecords')) || [];
+
+        // 自定義彈窗函數
+        function showModal(message) {
+            modalMessage.textContent = message;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.add('closing');
+            setTimeout(() => {
+                modal.classList.remove('active', 'closing');
+            }, 400);
+        }
+
+        modalCloseButton.onclick = closeModal;
+        modalCloseIcon.onclick = closeModal;
+
+        // 粒子背景動畫
+        const canvas = document.getElementById('particle-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 1,
+                speedX: (Math.random() - 0.5) * 0.2,
+                speedY: (Math.random() - 0.5) * 0.2
+            });
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                p.x += p.speedX;
+                p.y += p.speedY;
+                if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // 輸入驗證
+        function validateInputs() {
+            let isValid = true;
+            [nameGroup, emailGroup, passwordGroup].forEach(group => group.classList.remove('error'));
+            [nameInput, emailInput, passwordInput].forEach(input => input.classList.remove('error'));
+
+            if (!isLogin && !isReset && nameInput.value.trim() === '') {
+                nameGroup.classList.add('error');
+                nameInput.classList.add('error');
+                isValid = false;
+            }
+
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(emailInput.value)) {
+                emailGroup.classList.add('error');
+                emailInput.classList.add('error');
+                isValid = false;
+            }
+
+            if (!isReset && passwordInput.value.length < 6) {
+                passwordGroup.classList.add('error');
+                passwordInput.classList.add('error');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // 切換登入與註冊
+        toggleAuth.addEventListener('click', () => {
+            isLogin = !isLogin;
+            isReset = false;
+            updateForm();
+        });
+
+        // 忘記密碼
+        forgotPassword.addEventListener('click', () => {
+            isReset = true;
+            isLogin = false;
+            updateForm();
+        });
+
+        // 更新表單顯示並觸發動畫
+        function updateForm() {
+            formTitle.textContent = isReset ? '重設密碼' : (isLogin ? '登入' : '註冊');
+            authButton.textContent = isReset ? '發送重設郵件' : (isLogin ? '登入' : '註冊');
+            toggleAuth.textContent = isReset ? '返回登入' : (isLogin ? '還沒有帳號？註冊' : '已有帳號？登入');
+
+            [nameGroup, emailGroup, passwordGroup].forEach(group => {
+                group.classList.remove('active');
+                void group.offsetWidth;
+            });
+            authButton.classList.remove('active');
+            void authButton.offsetWidth;
+
+            nameGroup.classList.toggle('hidden', isLogin || isReset);
+            passwordGroup.classList.toggle('hidden', isReset);
+            forgotPassword.classList.toggle('hidden', !isLogin);
+
+            setTimeout(() => {
+                if (!nameGroup.classList.contains('hidden')) nameGroup.classList.add('active');
+                if (!emailGroup.classList.contains('hidden')) emailGroup.classList.add('active');
+                if (!passwordGroup.classList.contains('hidden')) passwordGroup.classList.add('active');
+                authButton.classList.add('active');
+            }, 10);
+        }
+
+        // 處理登入、註冊與密碼重設
+        authButton.addEventListener('click', async () => {
+            if (!validateInputs()) {
+                showModal('請檢查輸入內容！');
+                return;
+            }
+
+            authButton.classList.add('loading');
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            const name = nameInput.value;
+
+            try {
+                if (isReset) {
+                    await sendPasswordResetEmail(auth, email);
+                    showModal('已發送密碼重設郵件至 ' + email);
+                    isReset = false;
+                    isLogin = true;
+                    updateForm();
+                } else if (isLogin) {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    if (!user.emailVerified) {
+                        showModal('請先驗證您的電子郵件！');
+                        await auth.signOut();
+                    } else {
+                        authContainer.classList.add('hidden');
+                        aiContainer.classList.remove('hidden');
+                        loadChatHistory();
+                    }
+                } else {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    await Promise.all([
+                        updateProfile(user, { displayName: name }),
+                        sendEmailVerification(user)
+                    ]);
+                    showModal(`歡迎 ${name} 來到 XworkAi！請檢查您的電子郵件以完成驗證。`);
+                    await auth.signOut();
+                    isLogin = true;
+                    updateForm();
+                }
+            } catch (error) {
+                showModal((isReset ? '重設失敗' : isLogin ? '登入失敗' : '註冊失敗') + '：' + error.message);
+            } finally {
+                authButton.classList.remove('loading');
+            }
+        });
+
+        // 初始化表單動畫
+        updateForm();
+
+        // AI 頁面功能
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        settingsToggle.addEventListener('click', () => {
+            settingsPanel.classList.add('active');
+        });
+
+        settingsCloseIcon.addEventListener('click', () => {
+            settingsPanel.classList.add('closing');
+            setTimeout(() => {
+                settingsPanel.classList.remove('active', 'closing');
+            }, 400);
+        });
+
+        function loadChatHistory() {
+            chatHistory.innerHTML = '';
+            chatRecords.forEach((record, index) => {
+                const div = document.createElement('div');
+                div.className = 'chat-item';
+                div.innerHTML = `
+                    <span contenteditable="false">${record}</span>
+                    <button class="rename-btn">重新命名</button>
+                    <button class="delete-btn">刪除</button>
+                `;
+                const renameBtn = div.querySelector('.rename-btn');
+                const deleteBtn = div.querySelector('.delete-btn');
+                const span = div.querySelector('span');
+
+                renameBtn.addEventListener('click', () => {
+                    span.contentEditable = true;
+                    span.focus();
+                });
+
+                span.addEventListener('blur', () => {
+                    span.contentEditable = false;
+                    chatRecords[index] = span.textContent;
+                    localStorage.setItem('chatRecords', JSON.stringify(chatRecords));
+                });
+
+                deleteBtn.addEventListener('click', () => {
+                    chatRecords.splice(index, 1);
+                    localStorage.setItem('chatRecords', JSON.stringify(chatRecords));
+                    loadChatHistory();
+                });
+
+                chatHistory.appendChild(div);
+            });
+            if (chatRecords.length === 0) {
+                chatRecords = ['聊天 1', '聊天 2', '聊天 3'];
+                localStorage.setItem('chatRecords', JSON.stringify(chatRecords));
+                loadChatHistory();
+            }
+        }
+
+        // 設定頁面功能
+        let isDarkMode = true;
+        toggleTheme.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.body.style.background = isDarkMode 
+                ? 'linear-gradient(135deg, #1a1a1a, #2c2c2c)' 
+                : 'linear-gradient(135deg, #e0e0e0, #f5f5f5)';
+            toggleTheme.textContent = isDarkMode ? '切換至淺模式' : '切換至深模式';
+        });
+
+        updateUsernameButton.addEventListener('click', async () => {
+            const newName = newUsernameInput.value.trim();
+            if (newName) {
+                try {
+                    await updateProfile(auth.currentUser, { displayName: newName });
+                    showModal('用戶名已更新為：' + newName);
+                    newUsernameInput.value = '';
+                } catch (error) {
+                    showModal('更新失敗：' + error.message);
+                }
+            }
+        });
+
+        logoutButton.addEventListener('click', async () => {
+            await auth.signOut();
+            aiContainer.classList.add('hidden');
+            authContainer.classList.remove('hidden');
+            settingsPanel.classList.add('closing');
+            setTimeout(() => {
+                settingsPanel.classList.remove('active', 'closing');
+            }, 400);
+        });
+
+        // AI 輸入與送出
+        aiInput.addEventListener('input', () => {
+            if (aiInput.value.trim() === '') {
+                aiSubmit.classList.add('disabled');
+            } else {
+                aiSubmit.classList.remove('disabled');
+            }
+        });
+
+        aiSubmit.addEventListener('click', async () => {
+            if (aiSubmit.classList.contains('disabled')) return;
+
+            aiSubmit.classList.add('loading');
+            const inputText = aiInput.value.trim();
+            try {
+                // 假設有一個後端 API 端點 /api/gemini
+                const response = await fetch('/api/gemini', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: inputText })
+                });
+                const data = await response.json();
+                const aiResponse = data.response;
+
+                const userMessage = document.createElement('p');
+                userMessage.textContent = `你: ${inputText}`;
+                const aiMessage = document.createElement('p');
+                aiMessage.textContent = `AI: ${aiResponse}`;
+                aiContent.appendChild(userMessage);
+                aiContent.appendChild(aiMessage);
+                aiContent.scrollTop = aiContent.scrollHeight;
+                aiInput.value = '';
+                aiSubmit.classList.add('disabled');
+            } catch (error) {
+                showModal('AI 回應失敗：' + error.message);
+            } finally {
+                aiSubmit.classList.remove('loading');
+            }
+        });
+    </script>
+</body>
+</html>
